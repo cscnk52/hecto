@@ -13,15 +13,15 @@ impl Editor {
         }
         print!("Goodbye. \r\n");
     }
-    fn repl(&self) -> Result<(),std::io::Error> {
+    fn repl(&self) -> Result<(), std::io::Error> {
         enable_raw_mode()?;
         loop {
             if let Key(event) = read()? {
                 println!("{event:?} \r");
-                if let Char(c)  = event.code {
-                    if c =='q' {
+                if let Char(c) = event.code {
+                    if c == 'q' {
                         break;
-                    } 
+                    }
                 }
             }
         }
