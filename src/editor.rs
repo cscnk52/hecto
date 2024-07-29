@@ -46,7 +46,7 @@ impl Editor {
     fn refresh_screen(&self) -> Result<(), std::io::Error> {
         Terminal::hide_cursor()?;
         if self.should_quit {
-            let _ = Terminal::clean_screen();
+            Terminal::clean_screen()?;
             Terminal::print("GoodBye.\r\n")?;
         } else {
             Self::draw_rows()?;
