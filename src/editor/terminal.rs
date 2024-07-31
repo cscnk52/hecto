@@ -2,7 +2,6 @@ use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::Print;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType};
 use crossterm::{queue, Command};
-use std::fmt::Display;
 use std::io::{stdout, Error, Write};
 
 #[derive(Copy, Clone)]
@@ -10,7 +9,7 @@ pub struct Size {
     pub height: usize,
     pub width: usize,
 }
-#[derive(Copy, Clone,Default)]
+#[derive(Copy, Clone, Default)]
 pub struct Position {
     pub col: usize,
     pub row: usize,
@@ -34,7 +33,7 @@ impl Terminal {
         Ok(())
     }
     pub fn move_caret_to(position: Position) -> Result<(), Error> {
-        #[allow(clippy::as_conversions,clippy::cast_possible_truncation)]
+        #[allow(clippy::as_conversions, clippy::cast_possible_truncation)]
         Self::queue_command(MoveTo(position.col as u16, position.row as u16))?;
         Ok(())
     }
@@ -58,7 +57,7 @@ impl Terminal {
         Self::queue_command(Show)?;
         Ok(())
     }
-    pub fn print<T: Display>(string: T) -> Result<(), Error> {
+    pub fn print(string: &str) -> Result<(), Error> {
         Self::queue_command(Print(string))?;
         Ok(())
     }
