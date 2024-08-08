@@ -3,7 +3,11 @@ use view::View;
 mod terminal;
 mod view;
 use core::cmp::min;
-use std::{env, io::Error};
+use std::{
+    env,
+    io::Error,
+    panic::{set_hook, take_hook},
+};
 use terminal::{Position, Size, Terminal};
 
 #[derive(Clone, Copy, Default)]
@@ -19,31 +23,43 @@ pub struct Editor {
 }
 
 impl Editor {
-    pub fn run(&mut self) {
-        Terminal::initialize().unwrap();
-        self.handle_args();
-        let result = self.repl();
-        Terminal::terminate().unwrap();
-        result.unwrap();
-    }
-    fn handle_args(&mut self) {
+    pub fn new() -> Result<Self, Error> {
+        let current_hook = take_hook();
+        set_hook(Box::new(move |painc_info| {
+            let _ = Terminal::terminate();
+            current_hook(painc_info);
+        }));
+        Terminal::initialize()?;
+        let mut view = View::default();
         let args: Vec<String> = env::args().collect();
         if let Some(file_name) = args.get(1) {
-            self.view.load(file_name);
+            view.load(file_name);
         }
+        Ok(Self {
+            should_quit: false,
+            location: Location::default(),
+            view,
+        })
     }
-    fn repl(&mut self) -> Result<(), Error> {
+
+    pub fn run(&mut self) {
         loop {
-            self.refresh_screen()?;
+            self.refresh_screen();
             if self.should_quit {
                 break;
             }
-            let event = read()?;
-            self.evaluate_event(event)?;
+            match read() {
+                Ok(event) => self.evaluate_event(event),
+                Err(err) => {
+                    #[cfg(debug_assertions)]
+                    {
+                        panic!("Could not read event: {err:?}");
+                    }
+                }
+            }
         }
-        Ok(())
     }
-    fn evaluate_event(&mut self, event: Event) -> Result<(), Error> {
+    fn evaluate_event(&mut self, event: Event) {
         match event {
             Event::Key(KeyEvent {
                 code,
@@ -65,7 +81,7 @@ impl Editor {
                     | KeyCode::End,
                     _,
                 ) => {
-                    self.move_point(code)?;
+                    self.move_point(code);
                 }
                 _ => {}
             },
@@ -78,29 +94,21 @@ impl Editor {
             }
             _ => {}
         }
-        Ok(())
     }
-    fn refresh_screen(&mut self) -> Result<(), std::io::Error> {
-        Terminal::hide_caret()?;
-        Terminal::move_caret_to(Position::default())?;
-        if self.should_quit {
-            Terminal::clean_screen()?;
-            Terminal::print("GoodBye.\r\n")?;
-        } else {
-            self.view.render()?;
-            Terminal::move_caret_to(Position {
-                col: self.location.x,
-                row: self.location.y,
-            })?;
-            Terminal::show_caret()?;
-            Terminal::execute()?;
-        }
-        Ok(())
+    fn refresh_screen(&mut self) {
+        let _ = Terminal::hide_caret();
+        let _ = self.view.render();
+        let _ = Terminal::move_caret_to(Position {
+            col: self.location.x,
+            row: self.location.y,
+        });
+        let _ = Terminal::show_caret();
+        let _ = Terminal::execute();
     }
 
-    fn move_point(&mut self, key_code: KeyCode) -> Result<(), Error> {
+    fn move_point(&mut self, key_code: KeyCode) {
         let Location { mut x, mut y } = self.location;
-        let Size { height, width } = Terminal::size()?;
+        let Size { height, width } = Terminal::size().unwrap_or_default();
         match key_code {
             KeyCode::Up => {
                 y = y.saturating_sub(1);
@@ -129,6 +137,14 @@ impl Editor {
             _ => (),
         }
         self.location = Location { x, y };
-        Ok(())
+    }
+}
+
+impl Drop for Editor {
+    fn drop(&mut self) {
+        let _ = Terminal::terminate();
+        if self.should_quit {
+            let _ = Terminal::print("GoodBye.\r\n");
+        }
     }
 }
