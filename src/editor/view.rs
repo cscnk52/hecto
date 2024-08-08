@@ -61,11 +61,11 @@ impl View {
         #[allow(clippy::integer_division)]
         let padding = (width.saturating_sub(len).saturating_sub(1)) / 2;
 
-        let mut full_message = format!("~{}{}"," ".repeat(padding), welcome_message);
+        let mut full_message = format!("~{}{}", " ".repeat(padding), welcome_message);
         full_message.truncate(width);
         full_message
     }
-    pub fn load( & mut self, file_name: &str) {
+    pub fn load(&mut self, file_name: &str) {
         if let Ok(buffer) = Buffer::load(file_name) {
             self.buffer = buffer;
             self.need_redraw = true;

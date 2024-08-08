@@ -69,15 +69,12 @@ impl Editor {
                 }
                 _ => {}
             },
-            Event::Resize(width_u16,height_u16 ) => {
+            Event::Resize(width_u16, height_u16) => {
                 #[allow(clippy::as_conversions)]
                 let height = height_u16 as usize;
                 #[allow(clippy::integer_division)]
                 let width = width_u16 as usize;
-                self.view.resize(Size{
-                    height,
-                    width,
-                });
+                self.view.resize(Size { height, width });
             }
             _ => {}
         }
