@@ -22,15 +22,27 @@ pub struct Location {
     pub line_index: usize,
 }
 impl View {
+    pub fn handle_command(&mut self, command: EditCommand) {
+        match command {
+            EditCommand::Resize(size) => self.resize(size),
+            EditCommand::Move(direction) => self.move_text_location(&direction),
+            EditCommand::Quit => {}
+        }
+    }
+    pub fn load(&mut self, file_name: &str) {
+        if let Ok(buffer) = Buffer::load(file_name) {
+            self.buffer = buffer;
+            self.need_redraw = true;
+        }
+    }
     pub fn resize(&mut self, to: Size) {
         self.size = to;
         self.scroll_text_location_into_view();
         self.need_redraw = true;
     }
-    fn render_line(at: usize, line_text: &str) {
-        let result = Terminal::print_row(at, line_text);
-        debug_assert!(result.is_ok(), "Failed to render line");
-    }
+
+    // region: Rendering
+
     pub fn render(&mut self) {
         if !self.need_redraw {
             return;
@@ -57,6 +69,10 @@ impl View {
         }
         self.need_redraw = false;
     }
+    fn render_line(at: usize, line_text: &str) {
+        let result = Terminal::print_row(at, line_text);
+        debug_assert!(result.is_ok(), "Failed to render line");
+    }
     fn build_welcome_message(width: usize) -> String {
         if width == 0 {
             return " ".to_string();
@@ -75,35 +91,10 @@ impl View {
         full_message.truncate(width);
         full_message
     }
-    pub fn load(&mut self, file_name: &str) {
-        if let Ok(buffer) = Buffer::load(file_name) {
-            self.buffer = buffer;
-            self.need_redraw = true;
-        }
-    }
-    pub fn handle_command(&mut self, command: EditCommand) {
-        match command {
-            EditCommand::Resize(size) => self.resize(size),
-            EditCommand::Move(direction) => self.move_text_location(&direction),
-            EditCommand::Quit => {}
-        }
-    }
-    fn move_text_location(&mut self, direction: &Direction) {
-        let Size { height, .. } = self.size;
-        // This match move position, but does not check for all boundaries.
-        // The final boundarline checking happens after the match statement.
-        match direction {
-            Direction::Up => self.move_up(1),
-            Direction::Down => self.move_down(1),
-            Direction::Left => self.move_left(),
-            Direction::Right => self.move_right(),
-            Direction::PageUp => self.move_up(height.saturating_sub(1)),
-            Direction::PageDown => self.move_down(height.saturating_sub(1)),
-            Direction::Home => self.move_to_start_of_line(),
-            Direction::End => self.move_to_end_of_line(),
-        }
-        self.scroll_text_location_into_view();
-    }
+    // endregion
+
+    // region: Scrolling
+
     fn scroll_vertically(&mut self, to: usize) {
         let Size { height, .. } = self.size;
         let offset_changed = if to < self.scroll_offset.row {
@@ -135,6 +126,10 @@ impl View {
         self.scroll_vertically(row);
         self.scroll_horizontally(col);
     }
+    // endregion
+
+    // region: Location and Position Handing
+
     pub fn caret_position(&self) -> Position {
         let row = self.text_location.line_index;
         let col = self.buffer.lines.get(row).map_or(0, |line| {
@@ -148,6 +143,27 @@ impl View {
             line.width_until(self.text_location.grapheme_index)
         });
         Position { col, row }
+    }
+
+    // endregion
+
+    // region: text location movement
+
+    fn move_text_location(&mut self, direction: &Direction) {
+        let Size { height, .. } = self.size;
+        // This match move position, but does not check for all boundaries.
+        // The final boundarline checking happens after the match statement.
+        match direction {
+            Direction::Up => self.move_up(1),
+            Direction::Down => self.move_down(1),
+            Direction::Left => self.move_left(),
+            Direction::Right => self.move_right(),
+            Direction::PageUp => self.move_up(height.saturating_sub(1)),
+            Direction::PageDown => self.move_down(height.saturating_sub(1)),
+            Direction::Home => self.move_to_start_of_line(),
+            Direction::End => self.move_to_end_of_line(),
+        }
+        self.scroll_text_location_into_view();
     }
     fn move_up(&mut self, step: usize) {
         self.text_location.line_index = self.text_location.line_index.saturating_sub(step);
@@ -212,6 +228,8 @@ impl View {
     fn snap_to_valid_line(&mut self) {
         self.text_location.line_index = min(self.text_location.line_index, self.buffer.height());
     }
+
+    // endregion
 }
 impl Default for View {
     fn default() -> Self {

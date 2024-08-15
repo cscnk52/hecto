@@ -28,6 +28,13 @@ impl Position {
 pub struct Terminal;
 
 impl Terminal {
+    pub fn initialize() -> Result<(), Error> {
+        enable_raw_mode()?;
+        Self::enter_alternate_screen()?;
+        Self::clean_screen()?;
+        Self::execute()?;
+        Ok(())
+    }
     pub fn terminate() -> Result<(), Error> {
         Self::leave_alternate_screen()?;
         Self::show_caret()?;
@@ -35,11 +42,18 @@ impl Terminal {
         disable_raw_mode()?;
         Ok(())
     }
-    pub fn initialize() -> Result<(), Error> {
-        enable_raw_mode()?;
-        Self::enter_alternate_screen()?;
-        Self::clean_screen()?;
-        Self::execute()?;
+
+    pub fn clean_screen() -> Result<(), Error> {
+        Self::queue_command(Clear(ClearType::All))?;
+        Ok(())
+    }
+    pub fn clean_line() -> Result<(), Error> {
+        Self::queue_command(Clear(ClearType::CurrentLine))?;
+        Ok(())
+    }
+    pub fn move_caret_to(position: Position) -> Result<(), Error> {
+        #[allow(clippy::as_conversions, clippy::cast_possible_truncation)]
+        Self::queue_command(MoveTo(position.col as u16, position.row as u16))?;
         Ok(())
     }
     pub fn enter_alternate_screen() -> Result<(), Error> {
@@ -50,27 +64,7 @@ impl Terminal {
         Self::queue_command(EnterAlternateScreen)?;
         Ok(())
     }
-    pub fn clean_screen() -> Result<(), Error> {
-        Self::queue_command(Clear(ClearType::All))?;
-        Ok(())
-    }
-    pub fn move_caret_to(position: Position) -> Result<(), Error> {
-        #[allow(clippy::as_conversions, clippy::cast_possible_truncation)]
-        Self::queue_command(MoveTo(position.col as u16, position.row as u16))?;
-        Ok(())
-    }
-    pub fn size() -> Result<Size, Error> {
-        let (width_u16, height_u16) = size()?;
-        #[allow(clippy::as_conversions)]
-        let height = height_u16 as usize;
-        #[allow(clippy::as_conversions)]
-        let width = width_u16 as usize;
-        Ok(Size { height, width })
-    }
-    pub fn clean_line() -> Result<(), Error> {
-        Self::queue_command(Clear(ClearType::CurrentLine))?;
-        Ok(())
-    }
+
     pub fn hide_caret() -> Result<(), Error> {
         Self::queue_command(Hide)?;
         Ok(())
@@ -83,14 +77,22 @@ impl Terminal {
         Self::queue_command(Print(string))?;
         Ok(())
     }
-    pub fn execute() -> Result<(), Error> {
-        stdout().flush()?;
-        Ok(())
-    }
     pub fn print_row(row: usize, line_text: &str) -> Result<(), Error> {
         Self::move_caret_to(Position { row, col: 0 })?;
         Self::clean_line()?;
         Self::print(line_text)?;
+        Ok(())
+    }
+    pub fn size() -> Result<Size, Error> {
+        let (width_u16, height_u16) = size()?;
+        #[allow(clippy::as_conversions)]
+        let height = height_u16 as usize;
+        #[allow(clippy::as_conversions)]
+        let width = width_u16 as usize;
+        Ok(Size { height, width })
+    }
+    pub fn execute() -> Result<(), Error> {
+        stdout().flush()?;
         Ok(())
     }
     fn queue_command<T: Command>(command: T) -> Result<(), Error> {
