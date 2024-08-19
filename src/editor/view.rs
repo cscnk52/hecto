@@ -31,12 +31,7 @@ impl View {
             EditCommand::Backspace => self.delete_backward(),
             EditCommand::Delete => self.delete(),
             EditCommand::Enter => self.insert_newline(),
-        }
-    }
-    pub fn load(&mut self, file_name: &str) {
-        if let Ok(buffer) = Buffer::load(file_name) {
-            self.buffer = buffer;
-            self.need_redraw = true;
+            EditCommand::Save => self.save(),
         }
     }
     pub fn resize(&mut self, to: Size) {
@@ -45,7 +40,22 @@ impl View {
         self.need_redraw = true;
     }
 
+    // region: file i/o
+
+    pub fn load(&mut self, file_name: &str) {
+        if let Ok(buffer) = Buffer::load(file_name) {
+            self.buffer = buffer;
+            self.need_redraw = true;
+        }
+    }
+    pub fn save(&self) {
+        let _ = self.buffer.save();
+    }
+
+    // endregion
+
     // region: Text editing
+
     fn insert_newline(&mut self) {
         self.buffer.insert_newline(self.text_location);
         self.move_text_location(&Direction::Right);
