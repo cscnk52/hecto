@@ -160,7 +160,7 @@ impl View {
         if remaining_width < len {
             return "~".to_string();
         }
-        format!("{:<1}{:remaining_width$}", "~", welcome_message)
+        format!("{:<1}{:^remaining_width$}", "~", welcome_message)
     }
     // endregion
 
