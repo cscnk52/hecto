@@ -173,11 +173,8 @@ impl View {
     // region: Location and Position Handing
 
     pub fn caret_position(&self) -> Position {
-        let row = self.text_location.line_index;
-        let col = self.buffer.lines.get(row).map_or(0, |line| {
-            line.width_until(self.text_location.grapheme_index)
-        });
-        Position { col, row }
+        self.text_location_to_position()
+            .saturating_sub(self.scroll_offset)
     }
     fn text_location_to_position(&self) -> Position {
         let row = self.text_location.line_index;
