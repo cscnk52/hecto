@@ -1,3 +1,4 @@
+use super::{Position, Size};
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::{Attribute, Print};
 use crossterm::terminal::{
@@ -7,16 +8,6 @@ use crossterm::terminal::{
 use crossterm::{queue, Command};
 use std::io::{stdout, Error, Write};
 
-#[derive(Default, Copy, Clone, PartialEq, Eq)]
-pub struct Size {
-    pub height: usize,
-    pub width: usize,
-}
-#[derive(Copy, Clone, Default)]
-pub struct Position {
-    pub col: usize,
-    pub row: usize,
-}
 pub struct Terminal;
 
 impl Terminal {
