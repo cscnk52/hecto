@@ -38,6 +38,6 @@ jobs:
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./target/release/your_binary
-        asset_name: your_binary
+        asset_path: ./target/release/hecto
+        asset_name: hecto
         asset_content_type: application/octet-stream
