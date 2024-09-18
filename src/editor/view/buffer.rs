@@ -1,8 +1,9 @@
-use super::FileInfo;
-use super::Line;
-use super::Location;
-use std::fs::{read_to_string, File};
-use std::io::{Error, Write};
+use std::{
+    fs::{read_to_string, File},
+    io::{Error, Write},
+};
+
+use super::{FileInfo, Line, Location};
 
 #[derive(Default)]
 pub struct Buffer {

@@ -1,8 +1,9 @@
+use std::{cmp::min, io::Error};
+
 use super::{
     command::{Edit, Move},
     DocumentStatus, Line, Position, Size, Terminal, UIComponent, NAME, VERSION,
 };
-use std::{cmp::min, io::Error};
 
 mod buffer;
 use buffer::Buffer;
@@ -31,6 +32,30 @@ impl View {
             is_modified: self.buffer.dirty,
         }
     }
+
+    pub const fn is_file_loaded(&self) -> bool {
+        self.buffer.is_file_loaded()
+    }
+
+    // region: file i/o
+
+    pub fn load(&mut self, file_name: &str) -> Result<(), Error> {
+        let buffer = Buffer::load(file_name)?;
+        self.buffer = buffer;
+        self.set_needs_redraw(true);
+        Ok(())
+    }
+    pub fn save(&mut self) -> Result<(), Error> {
+        self.buffer.save()
+    }
+    pub fn save_as(&mut self, file_name: &str) -> Result<(), Error> {
+        self.buffer.save_as(file_name)
+    }
+
+    // endregion
+
+    // region: command handling
+
     pub fn handle_edit_command(&mut self, command: Edit) {
         match command {
             Edit::Insert(character) => self.insert_char(character),
@@ -52,24 +77,6 @@ impl View {
             Move::EndOfLine => self.move_to_end_of_line(),
         }
         self.scroll_text_location_into_view();
-    }
-    pub const fn is_file_loaded(&self) -> bool {
-        self.buffer.is_file_loaded()
-    }
-
-    // region: file i/o
-
-    pub fn load(&mut self, file_name: &str) -> Result<(), Error> {
-        let buffer = Buffer::load(file_name)?;
-        self.buffer = buffer;
-        self.set_needs_redraw(true);
-        Ok(())
-    }
-    pub fn save(&mut self) -> Result<(), Error> {
-        self.buffer.save()
-    }
-    pub fn save_as(&mut self, file_name: &str) -> Result<(), Error> {
-        self.buffer.save_as(file_name)
     }
 
     // endregion
@@ -129,6 +136,7 @@ impl View {
         }
         format!("{:<1}{:^remaining_width$}", "~", welcome_message)
     }
+
     // endregion
 
     // region: Scrolling
@@ -168,6 +176,7 @@ impl View {
         self.scroll_vertically(row);
         self.scroll_horizontally(col);
     }
+
     // endregion
 
     // region: Location and Position Handing
@@ -197,7 +206,6 @@ impl View {
         self.snap_to_valid_grapheme();
         self.snap_to_valid_line();
     }
-
     // clippy: arithmetic_side_effects: This function performs arithmetic calculations
     // after explicitly checking that the target value will be within bounds.
     #[allow(clippy::arithmetic_side_effects)]
@@ -214,6 +222,9 @@ impl View {
             self.move_down(1);
         }
     }
+    // clippy::arithmetic_side_effects: This function performs arithmetic calculations
+    // after explicitly checking that the target value will be within bounds.
+    #[allow(clippy::arithmetic_side_effects)]
     fn move_left(&mut self) {
         if self.text_location.grapheme_index > 0 {
             self.text_location.grapheme_index -= 1;
@@ -222,11 +233,9 @@ impl View {
             self.move_to_end_of_line();
         }
     }
-
     fn move_to_start_of_line(&mut self) {
         self.text_location.grapheme_index = 0;
     }
-
     fn move_to_end_of_line(&mut self) {
         self.text_location.grapheme_index = self
             .buffer

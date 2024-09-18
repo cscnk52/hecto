@@ -1,38 +1,42 @@
-use commandbar::CommandBar;
 use crossterm::event::{read, Event, KeyEvent, KeyEventKind};
-use uicomponent::UIComponent;
-use view::View;
-mod terminal;
-mod view;
 use std::{
     env,
     io::Error,
     panic::{set_hook, take_hook},
 };
-use terminal::Terminal;
-mod statusbar;
-use statusbar::StatusBar;
+
 mod command;
+mod commandbar;
 mod documentstatus;
+mod line;
 mod messagebar;
+mod position;
+mod size;
+mod statusbar;
+mod terminal;
 mod uicomponent;
+mod view;
+
+use commandbar::CommandBar;
 use documentstatus::DocumentStatus;
-pub const NAME: &str = env!("CARGO_PKG_NAME");
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+use line::Line;
+use messagebar::MessageBar;
+use position::Position;
+use size::Size;
+use statusbar::StatusBar;
+use terminal::Terminal;
+use uicomponent::UIComponent;
+use view::View;
+
 use self::command::{
     Command::{self, Edit, Move, System},
     Edit::InsertNewLine,
     System::{Dismiss, Quit, Resize, Save, Search},
 };
+
+pub const NAME: &str = env!("CARGO_PKG_NAME");
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const QUIT_TIMES: u8 = 3;
-mod commandbar;
-mod line;
-use line::Line;
-mod position;
-mod size;
-use messagebar::MessageBar;
-use position::Position;
-use size::Size;
 
 #[derive(Eq, PartialEq, Default)]
 enum PromptType {
@@ -84,6 +88,10 @@ impl Editor {
         editor.refresh_status();
         Ok(editor)
     }
+
+    // endregion
+
+    // region: Event Loop
 
     pub fn run(&mut self) {
         loop {
@@ -154,6 +162,11 @@ impl Editor {
             }
         }
     }
+
+    // endregion
+
+    // region: command handling
+
     fn process_command(&mut self, command: Command) {
         if let System(Resize(size)) = command {
             self.handle_resize_command(size);
@@ -180,6 +193,54 @@ impl Editor {
             Move(move_command) => self.view.handle_move_command(move_command),
         }
     }
+
+    // endregion
+
+    // region: resize command handling
+
+    fn handle_resize_command(&mut self, size: Size) {
+        self.terminal_size = size;
+        self.view.resize(Size {
+            height: size.height.saturating_sub(2),
+            width: size.width,
+        });
+        let bar_size = Size {
+            height: 1,
+            width: size.width,
+        };
+        self.message_bar.resize(bar_size);
+        self.status_bar.resize(bar_size);
+        self.command_bar.resize(bar_size);
+    }
+
+    // endregion
+
+    // region: quit command handling
+
+    // clippy::arithmetic_side_effects: quit_times is guaranteed to be between 0 and QUIT_TIMES
+    #[allow(clippy::arithmetic_side_effects)]
+    fn handle_quit_command(&mut self) {
+        if !self.view.get_status().is_modified || self.quit_times + 1 == QUIT_TIMES {
+            self.should_quit = true;
+        } else if self.view.get_status().is_modified {
+            self.update_message(&format!(
+                "WARNING! File has unsaved changes. Press Ctrl-Q {} more times to quit.",
+                QUIT_TIMES - self.quit_times - 1
+            ));
+            self.quit_times += 1;
+        }
+    }
+    fn reset_quit_times(&mut self) {
+        if self.quit_times > 0 {
+            self.quit_times = 0;
+            self.update_message("");
+        }
+    }
+
+    // endregion
+
+    // region: save command & prompt handling
+
     fn handle_save_command(&mut self) {
         if self.view.is_file_loaded() {
             self.save(None);
@@ -202,20 +263,6 @@ impl Editor {
             Edit(edit_command) => self.command_bar.handle_edit_command(edit_command),
         }
     }
-    fn handle_resize_command(&mut self, size: Size) {
-        self.terminal_size = size;
-        self.view.resize(Size {
-            height: size.height.saturating_sub(2),
-            width: size.width,
-        });
-        let bar_size = Size {
-            height: 1,
-            width: size.width,
-        };
-        self.message_bar.resize(bar_size);
-        self.status_bar.resize(bar_size);
-        self.command_bar.resize(bar_size);
-    }
     fn save(&mut self, file_name: Option<&str>) {
         let result = if let Some(name) = file_name {
             self.view.save_as(name)
@@ -228,25 +275,11 @@ impl Editor {
             self.message_bar.update_message("Error writing file!");
         }
     }
-    // clippy::arithmetic_side_effects: quit_times is guaranteed to be between 0 and QUIT_TIMES
-    #[allow(clippy::arithmetic_side_effects)]
-    fn handle_quit_command(&mut self) {
-        if !self.view.get_status().is_modified || self.quit_times + 1 == QUIT_TIMES {
-            self.should_quit = true;
-        } else if self.view.get_status().is_modified {
-            self.update_message(&format!(
-                "WARNING! File has unsaved changes. Press Ctrl-Q {} more times to quit.",
-                QUIT_TIMES - self.quit_times - 1
-            ));
-            self.quit_times += 1;
-        }
-    }
-    fn reset_quit_times(&mut self) {
-        if self.quit_times > 0 {
-            self.quit_times = 0;
-            self.update_message("");
-        }
-    }
+
+    // endregion
+
+    // region: search command & prompt handling
+
     fn process_command_during_search(&mut self, command: Command) {
         match command {
             // Not applicable during save, Resize already handled at this stage
@@ -255,9 +288,19 @@ impl Editor {
             Edit(edit_command) => self.command_bar.handle_edit_command(edit_command),
         }
     }
+
+    // endregion
+
+    // region: message & command bar
+
     fn update_message(&mut self, new_message: &str) {
         self.message_bar.update_message(new_message);
     }
+
+    // endregion
+
+    // region: prompt handling
+
     fn in_prompt(&self) -> bool {
         !self.prompt_type.is_none()
     }
@@ -270,6 +313,8 @@ impl Editor {
         self.command_bar.clear_value();
         self.prompt_type = prompt_type;
     }
+
+    // endregion
 }
 
 impl Drop for Editor {

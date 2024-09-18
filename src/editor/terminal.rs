@@ -1,12 +1,17 @@
-use super::{Position, Size};
-use crossterm::cursor::{Hide, MoveTo, Show};
-use crossterm::style::{Attribute, Print};
-use crossterm::terminal::{
-    disable_raw_mode, enable_raw_mode, size, Clear, ClearType, DisableLineWrap, EnableLineWrap,
-    EnterAlternateScreen, LeaveAlternateScreen, SetTitle,
-};
-use crossterm::{queue, Command};
 use std::io::{stdout, Error, Write};
+
+use crossterm::{
+    cursor::{Hide, MoveTo, Show},
+    queue,
+    style::{Attribute, Print},
+    terminal::{
+        disable_raw_mode, enable_raw_mode, size, Clear, ClearType, DisableLineWrap, EnableLineWrap,
+        EnterAlternateScreen, LeaveAlternateScreen, SetTitle,
+    },
+    Command,
+};
+
+use super::{Position, Size};
 
 pub struct Terminal;
 

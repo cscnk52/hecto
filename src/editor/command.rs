@@ -1,4 +1,3 @@
-use super::Size;
 use crossterm::event::{
     Event,
     KeyCode::{
@@ -8,6 +7,8 @@ use crossterm::event::{
     KeyEvent, KeyModifiers,
 };
 use std::convert::TryFrom;
+
+use super::Size;
 
 #[derive(Clone, Copy)]
 pub enum Move {
@@ -55,6 +56,7 @@ pub enum Edit {
     Delete,
     DeleteBackward,
 }
+
 impl TryFrom<KeyEvent> for Edit {
     type Error = String;
 
