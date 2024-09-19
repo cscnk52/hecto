@@ -284,8 +284,19 @@ impl Editor {
         match command {
             // Not applicable during save, Resize already handled at this stage
             System(Quit | Resize(_) | Search | Save) | Move(_) => {}
-            System(Dismiss) | Edit(InsertNewLine) => self.set_prompt(PromptType::None),
-            Edit(edit_command) => self.command_bar.handle_edit_command(edit_command),
+            System(Dismiss) => {
+                self.set_prompt(PromptType::None);
+                self.view.dismiss_search();
+            }
+            Edit(InsertNewLine) => {
+                self.set_prompt(PromptType::None);
+                self.view.exit_search();
+            }
+            Edit(edit_command) => {
+                self.command_bar.handle_edit_command(edit_command);
+                let query = self.command_bar.value();
+                self.view.search(&query);
+            }
         }
     }
 
@@ -308,7 +319,10 @@ impl Editor {
         match prompt_type {
             PromptType::None => self.message_bar.set_needs_redraw(true),
             PromptType::Save => self.command_bar.set_prompt("Save as: "),
-            PromptType::Search => self.command_bar.set_prompt("Search: "),
+            PromptType::Search => {
+                self.view.enter_search();
+                self.command_bar.set_prompt("Search (ESC to cancel): ");
+            }
         }
         self.command_bar.clear_value();
         self.prompt_type = prompt_type;
