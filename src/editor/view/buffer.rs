@@ -98,10 +98,6 @@ impl Buffer {
             {
                 panic!("Attempting to save with no file path present");
             }
-            #[cfg(not(debug_assertions))]
-            {
-                0
-            }
         }
         Ok(())
     }
