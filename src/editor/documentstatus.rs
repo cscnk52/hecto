@@ -14,9 +14,11 @@ impl DocumentStatus {
             String::new()
         }
     }
+
     pub fn line_count_to_string(&self) -> String {
         format!("{} lines", self.total_lines)
     }
+
     pub fn position_indicator_to_string(&self) -> String {
         format!(
             "{}/{}",

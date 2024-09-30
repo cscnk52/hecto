@@ -1,9 +1,9 @@
 use std::{cmp::min, io::Error};
 
 use super::{
+    DocumentStatus, Line, NAME, Position, Size, Terminal, UIComponent, VERSION,
     command::{Edit, Move},
     position::{Col, Row},
-    DocumentStatus, Line, Position, Size, Terminal, UIComponent, NAME, VERSION,
 };
 
 mod buffer;
@@ -55,24 +55,29 @@ impl View {
             query: None,
         });
     }
+
     pub fn exit_search(&mut self) {
         self.search_info = None;
     }
+
     pub fn dismiss_search(&mut self) {
         if let Some(search_info) = &self.search_info {
             self.text_location = search_info.prev_location;
             self.scroll_offset = search_info.prev_scroll_offset;
-            // ensure the previous location is still visible even if the terminal has been resized during search.
+            // ensure the previous location is still visible even if the terminal has been
+            // resized during search.
             self.scroll_text_location_into_view();
         }
         self.search_info = None;
     }
+
     pub fn search(&mut self, query: &str) {
         if let Some(search_info) = &mut self.search_info {
             search_info.query = Some(Line::from(query));
         }
         self.search_in_direction(self.text_location, SearchDirection::default());
     }
+
     fn get_search_query(&self) -> Option<&Line> {
         let query = self
             .search_info
@@ -85,6 +90,7 @@ impl View {
         );
         query
     }
+
     fn search_in_direction(&mut self, from: Location, direction: SearchDirection) {
         if let Some(location) = self.get_search_query().and_then(|query| {
             if query.is_empty() {
@@ -99,6 +105,7 @@ impl View {
             self.center_text_location();
         };
     }
+
     pub fn search_next(&mut self) {
         let step_right = self
             .get_search_query()
@@ -110,6 +117,7 @@ impl View {
         };
         self.search_in_direction(location, SearchDirection::Forward);
     }
+
     pub fn search_prev(&mut self) {
         self.search_in_direction(self.text_location, SearchDirection::Backward);
     }
@@ -124,9 +132,11 @@ impl View {
         self.set_needs_redraw(true);
         Ok(())
     }
+
     pub fn save(&mut self) -> Result<(), Error> {
         self.buffer.save()
     }
+
     pub fn save_as(&mut self, file_name: &str) -> Result<(), Error> {
         self.buffer.save_as(file_name)
     }
@@ -143,6 +153,7 @@ impl View {
             Edit::InsertNewLine => self.insert_newline(),
         }
     }
+
     pub fn handle_move_command(&mut self, command: Move) {
         let Size { height, .. } = self.size;
         match command {
@@ -167,16 +178,19 @@ impl View {
         self.handle_move_command(Move::Right);
         self.set_needs_redraw(true);
     }
+
     fn delete_backward(&mut self) {
         if self.text_location.line_idx != 0 || self.text_location.grapheme_idx != 0 {
             self.handle_move_command(Move::Left);
             self.delete();
         }
     }
+
     fn delete(&mut self) {
         self.buffer.delete(self.text_location);
         self.set_needs_redraw(true);
     }
+
     fn insert_char(&mut self, character: char) {
         let old_len = self
             .buffer
@@ -191,11 +205,12 @@ impl View {
             .map_or(0, Line::grapheme_count);
         let grapheme_delta = new_len.saturating_sub(old_len);
         if grapheme_delta > 0 {
-            //move right for an added grapheme (should be the regular case)
+            // move right for an added grapheme (should be the regular case)
             self.handle_move_command(Move::Right);
         }
         self.set_needs_redraw(true);
     }
+
     // endregion
 
     // region: Rendering
@@ -203,6 +218,7 @@ impl View {
     fn render_line(at: usize, line_text: &str) -> Result<(), Error> {
         Terminal::print_row(at, line_text)
     }
+
     fn build_welcome_message(width: usize) -> String {
         if width == 0 {
             return String::new();
@@ -235,6 +251,7 @@ impl View {
             self.set_needs_redraw(true);
         }
     }
+
     fn scroll_horizontally(&mut self, to: Col) {
         let Size { width, .. } = self.size;
         let offset_changed = if to < self.scroll_offset.col {
@@ -250,11 +267,13 @@ impl View {
             self.set_needs_redraw(true);
         }
     }
+
     fn scroll_text_location_into_view(&mut self) {
         let Position { row, col } = self.text_location_to_position();
         self.scroll_vertically(row);
         self.scroll_horizontally(col);
     }
+
     fn center_text_location(&mut self) {
         let Size { height, width } = self.size;
         let Position { row, col } = self.text_location_to_position();
@@ -273,6 +292,7 @@ impl View {
         self.text_location_to_position()
             .saturating_sub(self.scroll_offset)
     }
+
     fn text_location_to_position(&self) -> Position {
         let row = self.text_location.line_idx;
         let col = self
@@ -291,13 +311,16 @@ impl View {
         self.text_location.line_idx = self.text_location.line_idx.saturating_sub(step);
         self.snap_to_valid_grapheme();
     }
+
     fn move_down(&mut self, step: usize) {
         self.text_location.line_idx = self.text_location.line_idx.saturating_add(step);
         self.snap_to_valid_grapheme();
         self.snap_to_valid_line();
     }
-    // clippy: arithmetic_side_effects: This function performs arithmetic calculations
-    // after explicitly checking that the target value will be within bounds.
+
+    // clippy: arithmetic_side_effects: This function performs arithmetic
+    // calculations after explicitly checking that the target value will be
+    // within bounds.
     #[allow(clippy::arithmetic_side_effects)]
     fn move_right(&mut self) {
         let line_width = self
@@ -312,8 +335,10 @@ impl View {
             self.move_down(1);
         }
     }
-    // clippy::arithmetic_side_effects: This function performs arithmetic calculations
-    // after explicitly checking that the target value will be within bounds.
+
+    // clippy::arithmetic_side_effects: This function performs arithmetic
+    // calculations after explicitly checking that the target value will be
+    // within bounds.
     #[allow(clippy::arithmetic_side_effects)]
     fn move_left(&mut self) {
         if self.text_location.grapheme_idx > 0 {
@@ -323,9 +348,11 @@ impl View {
             self.move_to_end_of_line();
         }
     }
+
     fn move_to_start_of_line(&mut self) {
         self.text_location.grapheme_idx = 0;
     }
+
     fn move_to_end_of_line(&mut self) {
         self.text_location.grapheme_idx = self
             .buffer
@@ -334,8 +361,9 @@ impl View {
             .map_or(0, Line::grapheme_count);
     }
 
-    // Ensures self.location.grapheme_idx points to a valid grapheme index by snapping it to the left most grapheme if appropriate.
-    // Doesn't trigger scrolling.
+    // Ensures self.location.grapheme_idx points to a valid grapheme index by
+    // snapping it to the left most grapheme if appropriate. Doesn't trigger
+    // scrolling.
     fn snap_to_valid_grapheme(&mut self) {
         self.text_location.grapheme_idx = self
             .buffer
@@ -345,8 +373,9 @@ impl View {
                 min(line.grapheme_count(), self.text_location.grapheme_idx)
             });
     }
-    // Ensures self.location.line_index points to a valid line index by snapping it to the bottom most line if appropriate.
-    // Doesn't trigger scrolling.
+
+    // Ensures self.location.line_index points to a valid line index by snapping it
+    // to the bottom most line if appropriate. Doesn't trigger scrolling.
     fn snap_to_valid_line(&mut self) {
         self.text_location.line_idx = min(self.text_location.line_idx, self.buffer.height());
     }
@@ -358,12 +387,15 @@ impl UIComponent for View {
     fn set_needs_redraw(&mut self, value: bool) {
         self.need_redraw = value;
     }
+
     fn needs_redraw(&self) -> bool {
         self.need_redraw
     }
+
     fn set_size(&mut self, size: Size) {
         self.size = size;
     }
+
     fn draw(&mut self, origin_row: usize) -> Result<(), std::io::Error> {
         let Size { height, width } = self.size;
         let end_y = origin_row.saturating_add(height);

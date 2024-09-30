@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use crossterm::event::{
     Event,
     KeyCode::{
@@ -6,7 +8,6 @@ use crossterm::event::{
     },
     KeyEvent, KeyModifiers,
 };
-use std::convert::TryFrom;
 
 use super::Size;
 
@@ -24,6 +25,7 @@ pub enum Move {
 
 impl TryFrom<KeyEvent> for Move {
     type Error = String;
+
     fn try_from(event: KeyEvent) -> Result<Self, Self::Error> {
         let KeyEvent {
             code, modifiers, ..
@@ -88,6 +90,7 @@ pub enum System {
 
 impl TryFrom<KeyEvent> for System {
     type Error = String;
+
     fn try_from(event: KeyEvent) -> Result<Self, Self::Error> {
         let KeyEvent {
             code, modifiers, ..
@@ -117,10 +120,12 @@ pub enum Command {
     System(System),
 }
 
-// clippy::as_conversions: Will run into problems for rare edge case systems where usize < u16
+// clippy::as_conversions: Will run into problems for rare edge case systems
+// where usize < u16
 #[allow(clippy::as_conversions)]
 impl TryFrom<Event> for Command {
     type Error = String;
+
     fn try_from(event: Event) -> Result<Self, Self::Error> {
         match event {
             Event::Key(key_event) => Edit::try_from(key_event)

@@ -14,9 +14,11 @@ impl FileInfo {
             path: Some(PathBuf::from(file_name)),
         }
     }
+
     pub fn get_path(&self) -> Option<&Path> {
         self.path.as_deref()
     }
+
     pub const fn has_path(&self) -> bool {
         self.path.is_some()
     }

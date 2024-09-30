@@ -1,6 +1,6 @@
 use std::{cmp::min, io::Error};
 
-use super::{command::Edit, Line, Size, Terminal, UIComponent};
+use super::{Line, Size, Terminal, UIComponent, command::Edit};
 
 #[derive(Default)]
 pub struct CommandBar {
@@ -19,6 +19,7 @@ impl CommandBar {
         }
         self.set_needs_redraw(true);
     }
+
     pub fn caret_position_col(&self) -> usize {
         let max_width = self
             .prompt
@@ -26,13 +27,16 @@ impl CommandBar {
             .saturating_add(self.value.grapheme_count());
         min(max_width, self.size.width)
     }
+
     pub fn value(&self) -> String {
         self.value.to_string()
     }
+
     pub fn set_prompt(&mut self, prompt: &str) {
         self.prompt = prompt.to_string();
         self.set_needs_redraw(true);
     }
+
     pub fn clear_value(&mut self) {
         self.value = Line::default();
         self.set_needs_redraw(true);
@@ -43,18 +47,23 @@ impl UIComponent for CommandBar {
     fn set_needs_redraw(&mut self, value: bool) {
         self.need_redraw = value;
     }
+
     fn needs_redraw(&self) -> bool {
         self.need_redraw
     }
+
     fn set_size(&mut self, size: Size) {
         self.size = size;
     }
+
     fn draw(&mut self, origin: usize) -> Result<(), Error> {
-        // this is how much space there is between the right side of the prompt and the edge of the bar
+        // this is how much space there is between the right side of the prompt and the
+        // edge of the bar
         let area_for_value = self.size.width.saturating_sub(self.prompt.len());
-        // we always want to show the left part of the value, therefore the end of the visible range we try to access will be equal to the full width
+        // we always want to show the left part of the value, therefore the end of the
+        // visible range we try to access will be equal to the full width
         let value_end = self.value.width();
-        //This should give us the start for the grapheme subrange we want to print out.
+        // This should give us the start for the grapheme subrange we want to print out.
         let value_start = value_end.saturating_sub(area_for_value);
         let message = format!(
             "{}{}",

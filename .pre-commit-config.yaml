@@ -1,5 +1,42 @@
 repos:
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
+  - repo: local
     hooks:
       - id: fmt
+        name: fmt
+        description: Format files with cargo fmt.
+        entry: cargo +nightly fmt
+        language: rust
+        types: [rust]
+        args: ["--"]
+      - id: check-dev
+        name: check-dev
+        description: Check the package for errors with dev profile
+        entry: cargo +nightly check
+        language: system
+        types: [rust]
+        pass_filenames: false
+        args: ["--all-features", "--profile=dev"]
+      - id: clippy-dev
+        name: clippy-dev
+        description: Lint rust sources with dev profile
+        entry: cargo +nightly clippy
+        language: system
+        types: [rust]
+        pass_filenames: false
+        args: ["--all-features", "--profile=dev", "--", "-D", "warnings"]
+      - id: check-release
+        name: check-release
+        description: Check the package for errors with release profile
+        entry: cargo +nightly check
+        language: system
+        types: [rust]
+        pass_filenames: false
+        args: ["--all-features", "--profile=release"]
+      - id: clippy-release
+        name: clippy-release
+        description: Lint rust sources with release profile
+        entry: cargo +nightly clippy
+        language: system
+        types: [rust]
+        pass_filenames: false
+        args: ["--all-features", "--profile=release", "--", "-D", "warnings"]

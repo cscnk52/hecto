@@ -2,6 +2,7 @@ use std::{
     fmt,
     ops::{Deref, Range},
 };
+
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 
@@ -46,6 +47,7 @@ impl Line {
             string: String::from(line_str),
         }
     }
+
     fn str_to_fragments(line_str: &str) -> Vec<TextFragment> {
         line_str
             .grapheme_indices(true)
@@ -72,9 +74,11 @@ impl Line {
             })
             .collect()
     }
+
     fn rebuild_fragments(&mut self) {
         self.fragments = Self::str_to_fragments(&self.string);
     }
+
     fn get_replacement_character(for_str: &str) -> Option<char> {
         let width = for_str.width();
         match for_str {
@@ -93,6 +97,7 @@ impl Line {
             _ => None,
         }
     }
+
     pub fn get_visible_graphemes(&self, range: Range<GraphemeIdx>) -> String {
         if range.start >= range.end {
             return String::new();
@@ -118,9 +123,11 @@ impl Line {
         }
         result
     }
+
     pub fn grapheme_count(&self) -> GraphemeIdx {
         self.fragments.len()
     }
+
     pub fn width_until(&self, grapheme_idx: GraphemeIdx) -> GraphemeIdx {
         self.fragments
             .iter()
@@ -131,10 +138,13 @@ impl Line {
             })
             .sum()
     }
+
     pub fn width(&self) -> GraphemeIdx {
         self.width_until(self.grapheme_count())
     }
-    // Inserts a character into the line, or appends it at the end if at == grapheme_count + 1
+
+    // Inserts a character into the line, or appends it at the end if at ==
+    // grapheme_count + 1
     pub fn insert_char(&mut self, character: char, at: GraphemeIdx) {
         debug_assert!(at.saturating_sub(1) <= self.grapheme_count());
         if let Some(fragment) = self.fragments.get(at) {
@@ -144,9 +154,11 @@ impl Line {
         }
         self.rebuild_fragments();
     }
+
     pub fn append_char(&mut self, character: char) {
         self.insert_char(character, self.grapheme_count())
     }
+
     pub fn delete(&mut self, at: GraphemeIdx) {
         debug_assert!(at <= self.grapheme_count());
         if let Some(fragment) = self.fragments.get(at) {
@@ -158,13 +170,16 @@ impl Line {
             self.rebuild_fragments();
         }
     }
+
     pub fn delete_last(&mut self) {
         self.delete(self.grapheme_count().saturating_sub(1))
     }
+
     pub fn append(&mut self, other: &Self) {
         self.string.push_str(&other.string);
         self.rebuild_fragments();
     }
+
     pub fn split(&mut self, at: GraphemeIdx) -> Self {
         if let Some(fragment) = self.fragments.get(at) {
             let remainder = self.string.split_off(fragment.start_byte_idx);
@@ -174,6 +189,7 @@ impl Line {
             Self::default()
         }
     }
+
     fn byte_idx_to_grapheme_idx(&self, byte_idx: ByteIdx) -> GraphemeIdx {
         debug_assert!(byte_idx <= self.string.len());
         self.fragments
@@ -193,6 +209,7 @@ impl Line {
                 |grapheme_idx| grapheme_idx,
             )
     }
+
     fn grapheme_idx_to_byte_idx(&self, grapheme_idx: GraphemeIdx) -> ByteIdx {
         debug_assert!(grapheme_idx <= self.grapheme_count());
         if grapheme_idx == 0 || self.grapheme_count() == 0 {
@@ -212,6 +229,7 @@ impl Line {
             |fragment| fragment.start_byte_idx,
         )
     }
+
     pub fn search_forward(
         &self,
         query: &str,
@@ -227,6 +245,7 @@ impl Line {
             .and_then(|sub_str| sub_str.find(query))
             .map(|byte_idx| self.byte_idx_to_grapheme_idx(byte_idx.saturating_add(start_byte_idx)))
     }
+
     pub fn search_backward(
         &self,
         query: &str,
