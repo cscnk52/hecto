@@ -7,26 +7,26 @@ use std::{
 use crossterm::event::{Event, KeyEvent, KeyEventKind, read};
 
 mod command;
-mod commandbar;
-mod documentstatus;
+mod command_bar;
+mod document_status;
 mod line;
-mod messagebar;
+mod message_bar;
 mod position;
 mod size;
 mod statusbar;
 mod terminal;
-mod uicomponent;
+mod ui_component;
 mod view;
 
-use commandbar::CommandBar;
-use documentstatus::DocumentStatus;
+use command_bar::CommandBar;
+use document_status::DocumentStatus;
 use line::Line;
-use messagebar::MessageBar;
+use message_bar::MessageBar;
 use position::Position;
 use size::Size;
 use statusbar::StatusBar;
 use terminal::Terminal;
-use uicomponent::UIComponent;
+use ui_component::UIComponent;
 use view::View;
 
 use self::command::{
@@ -72,9 +72,9 @@ impl Editor {
 
     pub fn new() -> Result<Self, Error> {
         let current_hook = take_hook();
-        set_hook(Box::new(move |painc_info| {
+        set_hook(Box::new(move |panic_info| {
             let _ = Terminal::terminate();
-            current_hook(painc_info);
+            current_hook(panic_info);
         }));
         Terminal::initialize()?;
         let mut editor = Self::default();
@@ -92,7 +92,7 @@ impl Editor {
         Ok(editor)
     }
 
-    // endregion
+    // region end
 
     // region: Event Loop
 
@@ -175,7 +175,7 @@ impl Editor {
         }
     }
 
-    // endregion
+    // region end
 
     // region: command handling
 
@@ -207,7 +207,7 @@ impl Editor {
         }
     }
 
-    // endregion
+    // region end
 
     // region: resize command handling
 
@@ -226,7 +226,7 @@ impl Editor {
         self.command_bar.resize(bar_size);
     }
 
-    // endregion
+    // region end
 
     // region: quit command handling
 
@@ -252,7 +252,7 @@ impl Editor {
         }
     }
 
-    // endregion
+    // region end
 
     // region: save command & prompt handling
 
@@ -293,7 +293,7 @@ impl Editor {
         }
     }
 
-    // endregion
+    // region end
 
     // region: search command & prompt handling
 
@@ -318,7 +318,7 @@ impl Editor {
         }
     }
 
-    // endregion
+    // region end
 
     // region: message & command bar
 
@@ -326,7 +326,7 @@ impl Editor {
         self.message_bar.update_message(new_message);
     }
 
-    // endregion
+    // region end
 
     // region: prompt handling
 
@@ -348,7 +348,7 @@ impl Editor {
         self.prompt_type = prompt_type;
     }
 
-    // endregion
+    // region end
 }
 
 impl Drop for Editor {

@@ -63,7 +63,8 @@ impl UIComponent for CommandBar {
         // we always want to show the left part of the value, therefore the end of the
         // visible range we try to access will be equal to the full width
         let value_end = self.value.width();
-        // This should give us the start for the grapheme subrange we want to print out.
+        // This should give us the start for the grapheme sub range we want to print
+        // out.
         let value_start = value_end.saturating_sub(area_for_value);
         let message = format!(
             "{}{}",

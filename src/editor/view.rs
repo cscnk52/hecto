@@ -7,14 +7,14 @@ use super::{
 };
 
 mod buffer;
-mod fileinfo;
+mod file_info;
 mod location;
-mod searchinfo;
+mod search_info;
 
 use buffer::Buffer;
-use fileinfo::FileInfo;
+use file_info::FileInfo;
 use location::Location;
-use searchinfo::SearchInfo;
+use search_info::SearchInfo;
 
 #[derive(Default, PartialEq, Eq, Clone, Copy)]
 pub enum SearchDirection {
@@ -122,7 +122,7 @@ impl View {
         self.search_in_direction(self.text_location, SearchDirection::Backward);
     }
 
-    // endregion
+    // region end
 
     // region: file i/o
 
@@ -141,7 +141,7 @@ impl View {
         self.buffer.save_as(file_name)
     }
 
-    // endregion
+    // region end
 
     // region: command handling
 
@@ -169,7 +169,7 @@ impl View {
         self.scroll_text_location_into_view();
     }
 
-    // endregion
+    // region end
 
     // region: Text editing
 
@@ -211,7 +211,7 @@ impl View {
         self.set_needs_redraw(true);
     }
 
-    // endregion
+    // region end
 
     // region: Rendering
 
@@ -232,7 +232,7 @@ impl View {
         format!("{:<1}{:^remaining_width$}", "~", welcome_message)
     }
 
-    // endregion
+    // region end
 
     // region: Scrolling
 
@@ -284,7 +284,7 @@ impl View {
         self.set_needs_redraw(true);
     }
 
-    // endregion
+    // region end
 
     // region: Location and Position Handing
 
@@ -303,7 +303,7 @@ impl View {
         Position { col, row }
     }
 
-    // endregion
+    // region end
 
     // region: text location movement
 
@@ -380,7 +380,7 @@ impl View {
         self.text_location.line_idx = min(self.text_location.line_idx, self.buffer.height());
     }
 
-    // endregion
+    // region end
 }
 
 impl UIComponent for View {
