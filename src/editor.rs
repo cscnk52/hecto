@@ -6,28 +6,22 @@ use std::{
 
 use crossterm::event::{Event, KeyEvent, KeyEventKind, read};
 
+mod annotated_string;
 mod command;
-mod command_bar;
 mod document_status;
 mod line;
-mod message_bar;
 mod position;
 mod size;
-mod statusbar;
 mod terminal;
-mod ui_component;
-mod view;
+mod ui_components;
 
-use command_bar::CommandBar;
+use annotated_string::{AnnotatedString, AnnotationType};
 use document_status::DocumentStatus;
 use line::Line;
-use message_bar::MessageBar;
-use position::Position;
+use position::{Col, Position};
 use size::Size;
-use statusbar::StatusBar;
 use terminal::Terminal;
-use ui_component::UIComponent;
-use view::View;
+use ui_components::{CommandBar, MessageBar, StatusBar, UIComponent, View};
 
 use self::command::{
     Command::{self, Edit, Move, System},
