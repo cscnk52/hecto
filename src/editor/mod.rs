@@ -6,20 +6,18 @@ use std::{
 
 use crossterm::event::{Event, KeyEvent, KeyEventKind, read};
 
+use crate::prelude::*;
+
 mod annotated_string;
 mod command;
 mod document_status;
 mod line;
-mod position;
-mod size;
 mod terminal;
 mod ui_components;
 
 use annotated_string::{AnnotatedString, AnnotationType};
 use document_status::DocumentStatus;
 use line::Line;
-use position::{Col, Position};
-use size::Size;
 use terminal::Terminal;
 use ui_components::{CommandBar, MessageBar, StatusBar, UIComponent, View};
 
@@ -30,8 +28,6 @@ use self::command::{
     System::{Dismiss, Quit, Resize, Save, Search},
 };
 
-pub const NAME: &str = env!("CARGO_PKG_NAME");
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 const QUIT_TIMES: u8 = 3;
 
 #[derive(Eq, PartialEq, Default)]

@@ -2,6 +2,8 @@ use std::convert::TryFrom;
 
 use crossterm::event::Event;
 
+use crate::prelude::*;
+
 mod edit_command;
 mod move_command;
 mod system;
@@ -9,8 +11,6 @@ mod system;
 pub use edit_command::Edit;
 pub use move_command::Move;
 pub use system::System;
-
-use super::Size;
 
 #[derive(Clone, Copy)]
 pub enum Command {

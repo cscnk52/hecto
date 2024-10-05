@@ -1,4 +1,5 @@
 use super::AnnotationType;
+use crate::prelude::*;
 
 // clippy::struct_field_names: naming the field `type` is disallowed due to type
 // being a keyword.
@@ -6,6 +7,6 @@ use super::AnnotationType;
 #[allow(clippy::struct_field_names)]
 pub struct Annotation {
     pub annotation_type: AnnotationType,
-    pub start_byte_idx: usize,
-    pub end_byte_idx: usize,
+    pub start: ByteIdx,
+    pub end: ByteIdx,
 }

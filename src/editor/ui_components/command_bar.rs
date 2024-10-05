@@ -1,9 +1,10 @@
 use std::{cmp::min, io::Error};
 
 use super::{
-    super::{Line, Size, Terminal, command::Edit},
+    super::{Line, Terminal, command::Edit},
     UIComponent,
 };
+use crate::prelude::*;
 
 #[derive(Default)]
 pub struct CommandBar {
@@ -23,7 +24,7 @@ impl CommandBar {
         self.set_needs_redraw(true);
     }
 
-    pub fn caret_position_col(&self) -> usize {
+    pub fn caret_position_col(&self) -> ColIdx {
         let max_width = self
             .prompt
             .len()
@@ -59,7 +60,7 @@ impl UIComponent for CommandBar {
         self.size = size;
     }
 
-    fn draw(&mut self, origin: usize) -> Result<(), Error> {
+    fn draw(&mut self, origin: RowIdx) -> Result<(), Error> {
         // this is how much space there is between the right side of the prompt and the
         // edge of the bar
         let area_for_value = self.size.width.saturating_sub(self.prompt.len());

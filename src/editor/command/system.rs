@@ -3,7 +3,8 @@ use crossterm::event::{
     KeyEvent, KeyModifiers,
 };
 
-use super::super::Size;
+use crate::prelude::*;
+
 #[derive(Clone, Copy)]
 pub enum System {
     Save,

@@ -1,17 +1,18 @@
 use std::cmp::min;
 
 use super::{AnnotatedString, AnnotationStringPart};
+use crate::prelude::*;
 
 pub struct AnnotatedStringIterator<'a> {
     pub annotated_string: &'a AnnotatedString,
-    pub current_idx: usize,
+    pub current: ByteIdx,
 }
 
 impl<'a> Iterator for AnnotatedStringIterator<'a> {
     type Item = AnnotationStringPart<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current_idx >= self.annotated_string.string.len() {
+        if self.current >= self.annotated_string.string.len() {
             return None;
         }
 
@@ -20,32 +21,29 @@ impl<'a> Iterator for AnnotatedStringIterator<'a> {
             .annotated_string
             .annotations
             .iter()
-            .filter(|annotation| {
-                annotation.start_byte_idx <= self.current_idx
-                    && annotation.end_byte_idx > self.current_idx
-            })
+            .filter(|annotation| annotation.start < self.current && annotation.end > self.current)
             .last()
         {
-            let end_idx = min(annotation.end_byte_idx, self.annotated_string.string.len());
-            let start_idx = self.current_idx;
-            self.current_idx = end_idx;
+            let end = min(annotation.end, self.annotated_string.string.len());
+            let start = self.current;
+            self.current = end;
             return Some(AnnotationStringPart {
-                string: &self.annotated_string.string[start_idx..end_idx],
+                string: &self.annotated_string.string[start..end],
                 annotation_type: Some(annotation.annotation_type),
             });
         }
         // Find the boundary of the nearest annotation
-        let mut end_idx = self.annotated_string.string.len();
+        let mut end = self.annotated_string.string.len();
         for annotation in &self.annotated_string.annotations {
-            if annotation.start_byte_idx > self.current_idx && annotation.start_byte_idx < end_idx {
-                end_idx = annotation.start_byte_idx;
+            if annotation.start > self.current && annotation.start < end {
+                end = annotation.start;
             }
         }
-        let start_idx = self.current_idx;
-        self.current_idx = end_idx;
+        let start = self.current;
+        self.current = end;
 
         Some(AnnotationStringPart {
-            string: &self.annotated_string.string[start_idx..end_idx],
+            string: &self.annotated_string.string[start..end],
             annotation_type: None,
         })
     }

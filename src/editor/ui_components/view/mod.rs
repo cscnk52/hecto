@@ -4,20 +4,18 @@ use super::{
     super::{
         DocumentStatus, Line, NAME, Position, Size, Terminal, VERSION,
         command::{Edit, Move},
-        position::{Col, Row},
     },
     UIComponent,
 };
+use crate::prelude::*;
 
 mod buffer;
 mod file_info;
-mod location;
 mod search_direction;
 mod search_info;
 
 use buffer::Buffer;
 use file_info::FileInfo;
-use location::Location;
 use search_direction::SearchDirection;
 use search_info::SearchInfo;
 
@@ -67,8 +65,7 @@ impl View {
             // resized during search.
             self.scroll_text_location_into_view();
         }
-        self.search_info = None;
-        self.set_needs_redraw(true);
+        self.exit_search();
     }
 
     pub fn search(&mut self, query: &str) {
@@ -216,7 +213,7 @@ impl View {
 
     // region: Rendering
 
-    fn render_line(at: usize, line_text: &str) -> Result<(), Error> {
+    fn render_line(at: RowIdx, line_text: &str) -> Result<(), Error> {
         Terminal::print_row(at, line_text)
     }
 
@@ -237,7 +234,7 @@ impl View {
 
     // region: Scrolling
 
-    fn scroll_vertically(&mut self, to: Row) {
+    fn scroll_vertically(&mut self, to: RowIdx) {
         let Size { height, .. } = self.size;
         let offset_changed = if to < self.scroll_offset.row {
             self.scroll_offset.row = to;
@@ -253,7 +250,7 @@ impl View {
         }
     }
 
-    fn scroll_horizontally(&mut self, to: Col) {
+    fn scroll_horizontally(&mut self, to: ColIdx) {
         let Size { width, .. } = self.size;
         let offset_changed = if to < self.scroll_offset.col {
             self.scroll_offset.col = to;
@@ -397,7 +394,7 @@ impl UIComponent for View {
         self.size = size;
     }
 
-    fn draw(&mut self, origin_row: usize) -> Result<(), std::io::Error> {
+    fn draw(&mut self, origin_row: RowIdx) -> Result<(), std::io::Error> {
         let Size { height, width } = self.size;
         let end_y = origin_row.saturating_add(height);
         let top_third = height.div_ceil(3);

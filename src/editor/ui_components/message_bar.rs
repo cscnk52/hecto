@@ -3,10 +3,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-use super::{
-    super::{Size, Terminal},
-    UIComponent,
-};
+use super::{super::Terminal, UIComponent};
+use crate::prelude::*;
 
 const DEFAULT_DURATION: Duration = Duration::new(5, 0);
 
@@ -58,7 +56,7 @@ impl UIComponent for MessageBar {
 
     fn set_size(&mut self, _: Size) {}
 
-    fn draw(&mut self, origin: usize) -> Result<(), Error> {
+    fn draw(&mut self, origin: RowIdx) -> Result<(), Error> {
         if self.current_message.is_expired() {
             self.cleared_after_expiry = true;
         }
