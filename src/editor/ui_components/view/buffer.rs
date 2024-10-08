@@ -1,19 +1,51 @@
 use std::{
     fs::{File, read_to_string},
     io::{Error, Write},
+    ops::Range,
 };
 
-use super::{FileInfo, Line};
-use crate::prelude::*;
+use super::{FileInfo, Line, highlighter::Highlighter};
+use crate::{editor::annotated_string::AnnotatedString, prelude::*};
 
 #[derive(Default)]
 pub struct Buffer {
-    pub lines: Vec<Line>,
-    pub file_info: FileInfo,
-    pub dirty: bool,
+    lines: Vec<Line>,
+    file_info: FileInfo,
+    dirty: bool,
 }
 
 impl Buffer {
+    pub const fn is_dirty(&self) -> bool {
+        self.dirty
+    }
+
+    pub fn grapheme_count(&self, idx: LineIdx) -> GraphemeIdx {
+        self.lines.get(idx).map_or(0, Line::grapheme_count)
+    }
+
+    pub fn width_until(&self, idx: LineIdx, until: GraphemeIdx) -> GraphemeIdx {
+        self.lines
+            .get(idx)
+            .map_or(0, |line| line.width_until(until))
+    }
+
+    pub fn get_highlighted_substring(
+        &self,
+        line_idx: LineIdx,
+        range: Range<GraphemeIdx>,
+        highlighter: &Highlighter,
+    ) -> Option<AnnotatedString> {
+        self.lines.get(line_idx).map(|line| {
+            line.get_annotated_visible_sub_str(range, highlighter.get_annotations(line_idx))
+        })
+    }
+
+    pub fn highlight(&self, idx: LineIdx, highlighter: &mut Highlighter) {
+        if let Some(line) = self.lines.get(idx) {
+            highlighter.highlight(idx, line);
+        }
+    }
+
     pub fn load(file_name: &str) -> Result<Self, Error> {
         let contents = read_to_string(file_name)?;
         let mut lines = Vec::new();

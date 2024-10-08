@@ -5,15 +5,11 @@ use std::{
 
 mod annotated_string_iterator;
 mod annotated_string_part;
-mod annotation;
-pub mod annotation_type;
 
 use annotated_string_iterator::AnnotatedStringIterator;
 use annotated_string_part::AnnotationStringPart;
-use annotation::Annotation;
-pub use annotation_type::AnnotationType;
 
-use super::ByteIdx;
+use super::{Annotation, AnnotationType, ByteIdx};
 
 #[derive(Default, Debug)]
 pub struct AnnotatedString {

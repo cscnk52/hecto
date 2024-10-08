@@ -9,13 +9,17 @@ use crossterm::event::{Event, KeyEvent, KeyEventKind, read};
 use crate::prelude::*;
 
 mod annotated_string;
+mod annotation;
+pub mod annotation_type;
 mod command;
 mod document_status;
 mod line;
 mod terminal;
 mod ui_components;
 
-use annotated_string::{AnnotatedString, AnnotationType};
+use annotated_string::AnnotatedString;
+use annotation::Annotation;
+pub use annotation_type::AnnotationType;
 use document_status::DocumentStatus;
 use line::Line;
 use terminal::Terminal;
