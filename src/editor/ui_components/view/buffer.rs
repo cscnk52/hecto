@@ -19,6 +19,10 @@ impl Buffer {
         self.dirty
     }
 
+    pub const fn get_file_info(&self) -> &FileInfo {
+        &self.file_info
+    }
+
     pub fn grapheme_count(&self, idx: LineIdx) -> GraphemeIdx {
         self.lines.get(idx).map_or(0, Line::grapheme_count)
     }
