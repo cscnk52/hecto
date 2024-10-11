@@ -40,7 +40,7 @@ impl Buffer {
         highlighter: &Highlighter,
     ) -> Option<AnnotatedString> {
         self.lines.get(line_idx).map(|line| {
-            line.get_annotated_visible_sub_str(range, highlighter.get_annotations(line_idx))
+            line.get_annotated_visible_sub_str(range, Some(&highlighter.get_annotations(line_idx)))
         })
     }
 
