@@ -2,5 +2,5 @@
 pub enum AnnotationType {
     Match,
     SelectedMatch,
-    Dight,
+    Number,
 }

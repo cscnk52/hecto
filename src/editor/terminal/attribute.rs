@@ -34,7 +34,7 @@ impl From<AnnotationType> for Attribute {
                     b: 153,
                 }),
             },
-            AnnotationType::Dight => Self {
+            AnnotationType::Number => Self {
                 foreground: Some(Color::Rgb {
                     r: 255,
                     g: 99,
